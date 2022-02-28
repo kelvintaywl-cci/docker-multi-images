@@ -32,7 +32,7 @@ jobs:
             #    {
             #      "5432/tcp": {}
             #    }
-            dockerize -wait http://postgres:5432 -wait-retry-interval 3s -timeout 60s
+            dockerize -wait tcp://postgres:5432 -wait-retry-interval 3s -timeout 60s
 
 
 workflows:
