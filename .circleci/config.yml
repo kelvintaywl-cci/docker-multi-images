@@ -1,14 +1,14 @@
 version: 2.1
 
 jobs:
-  parameters:
-    name-postgres:
-      type: string
-      default: postgres
-    name-nginx:
-      type: string
-      default: nginx
   multi-image-fun:
+    parameters:
+      name-postgres:
+        type: string
+        default: postgres
+      name-nginx:
+        type: string
+        default: nginx
     docker:
       - image: cimg/base:stable
         name: primary
