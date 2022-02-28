@@ -1,30 +1,17 @@
 version: 2.1
 
-jobs:
-  multi-image-fun:
+commands:
+  wait-for-services:
     parameters:
-      name-postgres:
-        type: string
-        default: postgres
       name-nginx:
         type: string
-        default: nginx
-    docker:
-      - image: cimg/base:stable
-        name: primary
-      - image: postgres:14.2
-        name: << parameters.name-postgres >>
-        environment:
-          POSTGRES_PASSWORD: foobar
-          POSTGRES_USER: johndoe
-          POSTGRES_DB: loremipsum
-      - image: nginx:latest
-        name: << parameters.name-nginx >>
-          
-    resource_class: medium
+        default: localhost
+      name-postgres:
+        type: string
+        default: localhost
     steps:
       - run:
-          name: Wait for services
+          name: Wait for services to be ready
           command: |
             # docker.io/library/postgres:14.2 exposes its port at 5432
             # To confirm:
@@ -40,20 +27,61 @@ jobs:
             #      "5432/tcp": {}
             #    }
             dockerize -wait tcp://<< parameters.name-postgres >>:5432 -wait-retry-interval 3s -timeout 60s
+  curl-webpage:
+    parameters:
+      name-nginx:
+        type: string
+        default: localhost
+    steps:
+      - run:
+          name: Sanity check that hostname works
+          command: |
+            curl http://<< parameters.name-nginx >>:80
       - run:
           name: Confirm if subdomain works
           command: |
-            curl http://<< parameters.name-nginx >>:80
-            
             curl http://subdomain.<< parameters.name-nginx >>:80 || true
-            
+
+jobs:
+  container-names:
+    docker:
+      - image: cimg/base:stable
+        name: primary
+      - image: postgres:14.2
+        name: postgres
+        environment:
+          POSTGRES_PASSWORD: foobar
+          POSTGRES_USER: johndoe
+          POSTGRES_DB: loremipsum
+      - image: nginx:latest
+        name: nginx
+          
+    resource_class: medium
+    steps:
+      - wait-for-services:
+          name-nginx: nginx
+          name-postgres: postgres
+      - curl-webpage:
+          name-nginx: nginx
+  default-localhost:
+    docker:
+      - image: cimg/base:stable
+      - image: postgres:14.2
+        environment:
+          POSTGRES_PASSWORD: foobar
+          POSTGRES_USER: johndoe
+          POSTGRES_DB: loremipsum
+      - image: nginx:latest          
+    resource_class: medium
+    steps:
+      - wait-for-services:
+          name-nginx: localhost
+          name-postgres: localhost
+      - curl-webpage:
+          name-nginx: localhost            
 
 workflows:
   main:
     jobs:
-      - multi-image-fun:
-          name: container-names
-      - multi-image-fun:
-          name: localhost
-          name-postgres: localhost
-          name-nginx: localhost
+      - container-names
+      - default-localhost
