@@ -1,18 +1,25 @@
 version: 2.1
 
 jobs:
+  parameters:
+    name-postgres:
+      type: string
+      default: postgres
+    name-nginx:
+      type: string
+      default: nginx
   multi-image-fun:
     docker:
       - image: cimg/base:stable
         name: primary
       - image: postgres:14.2
-        name: postgres
+        name: << parameters.name-postgres >>
         environment:
           POSTGRES_PASSWORD: foobar
           POSTGRES_USER: johndoe
           POSTGRES_DB: loremipsum
       - image: nginx:latest
-        name: web
+        name: << parameters.name-nginx >>
           
     resource_class: medium
     steps:
@@ -25,17 +32,28 @@ jobs:
             #    {
             #      "80/tcp": {}
             #    }
-            dockerize -wait http://web:80 -wait-retry-interval 3s -timeout 60s
+            dockerize -wait http://<< parameters.name-nginx >>:80 -wait-retry-interval 3s -timeout 60s
             # docker.io/library/postgres:14.2 exposes its port at 5432
             # To confirm:
             #    $ docker inspect docker.io/library/postgres:14.2 | jq ".[0].Config.ExposedPorts"
             #    {
             #      "5432/tcp": {}
             #    }
-            dockerize -wait tcp://postgres:5432 -wait-retry-interval 3s -timeout 60s
-
+            dockerize -wait tcp://<< parameters.name-postgres >>:5432 -wait-retry-interval 3s -timeout 60s
+      - run:
+          name: Confirm if subdomain works
+          command: |
+            curl http://<< parameters.name-nginx >>:80
+            
+            curl http://subdomain.<< parameters.name-nginx >>:80 || true
+            
 
 workflows:
   main:
     jobs:
-      - multi-image-fun
+      - multi-image-fun:
+          name: container-names
+      - multi-image-fun:
+          name: localhost
+          name-postgres: localhost
+          name-nginx: localhost
