@@ -40,7 +40,7 @@ commands:
       - run:
           name: Confirm if subdomain works
           command: |
-            curl http://subdomain.<< parameters.name-nginx >>:80 || true
+            curl http://subdomain.<< parameters.name-nginx >>:80
 
 jobs:
   container-names:
