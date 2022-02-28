@@ -25,14 +25,14 @@ jobs:
             #    {
             #      "80/tcp": {}
             #    }
-            dockerize -wait http://localhost:80 -wait-retry-interval 3s -timeout 60s
+            dockerize -wait http://web:80 -wait-retry-interval 3s -timeout 60s
             # docker.io/library/postgres:14.2 exposes its port at 5432
             # To confirm:
             #    $ docker inspect docker.io/library/postgres:14.2 | jq ".[0].Config.ExposedPorts"
             #    {
             #      "5432/tcp": {}
             #    }
-            dockerize -wait http://localhost:5432 -wait-retry-interval 3s -timeout 60s
+            dockerize -wait http://postgres:5432 -wait-retry-interval 3s -timeout 60s
 
 
 workflows:
