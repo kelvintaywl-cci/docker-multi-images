@@ -1,0 +1,41 @@
+version: 2.1
+
+jobs:
+  multi-image-fun:
+    docker:
+      - image: cimg/base:stable
+        name: primary
+      - image: postgres:14.2
+        name: postgres
+        environment:
+          POSTGRES_PASSWORD: foobar
+          POSTGRES_USER: johndoe
+          POSTGRES_DB: loremipsum
+      - image: nginx:latest
+        name: web
+          
+    resource_class: medium
+    steps:
+      - run:
+          name: Wait for services
+          command: |
+            # docker.io/library/postgres:14.2 exposes its port at 5432
+            # To confirm:
+            #    $ docker inspect docker.io/library/postgres:14.2 | jq ".[0].Config.ExposedPorts"
+            #    {
+            #      "5432/tcp": {}
+            #    }
+            dockerize -wait http://localhost:5432 -wait-retry-interval 2s -timeout 20s
+            # docker.io/library/postgres:14.2 exposes its port at 5432
+            # To confirm:
+            #    $ docker inspect docker.io/library/nginx:latest | jq ".[0].Config.ExposedPorts"
+            #    {
+            #      "80/tcp": {}
+            #    }
+            dockerize -wait http://localhost:80 -wait-retry-interval 2s -timeout 20s
+
+
+workflows:
+  main:
+    jobs:
+      - multi-image-fun
