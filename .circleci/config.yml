@@ -37,10 +37,6 @@ commands:
           name: Sanity check that hostname works
           command: |
             curl http://<< parameters.name-nginx >>:80
-      - run:
-          name: Confirm if subdomain works
-          command: |
-            curl http://subdomain.<< parameters.name-nginx >>:80
 
 jobs:
   container-names:
@@ -63,6 +59,10 @@ jobs:
           name-postgres: postgres
       - curl-webpage:
           name-nginx: nginx
+      - run:
+          name: exec on container
+          command: |
+            docker exec nginx echo "hello"
   default-localhost:
     docker:
       - image: cimg/base:stable
@@ -84,4 +84,4 @@ workflows:
   main:
     jobs:
       - container-names
-      - default-localhost
+      # - default-localhost
