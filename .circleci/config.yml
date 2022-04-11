@@ -39,6 +39,31 @@ commands:
             curl http://<< parameters.name-nginx >>:80
 
 jobs:
+  test-machine-docker:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - run:
+          name: Spin up fancy nginx
+          command: |
+            docker run -d --name fancy_nginx -p "8080:80" docker.io/library/nginx:latest
+      - run:
+          # Showcase another way to check on our server, besides dockerize
+          name: Wait on application to be ready
+          command: |
+            N=8
+            while [ $N -gt 0 ]
+            do
+              if $(nc -z localhost 8080); then
+                echo "Connected!"
+                exit 0
+              fi
+              echo "Not connected; retrying"
+              N=$(( $N - 1 ))
+              sleep 1
+            done
+            exit 1
+      - run: docker exec fancy_nginx echo "hello"
   container-names:
     docker:
       - image: cimg/base:stable
@@ -83,5 +108,6 @@ jobs:
 workflows:
   main:
     jobs:
-      - container-names
+      # - container-names
+      - test-machine-docker
       # - default-localhost
