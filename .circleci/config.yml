@@ -20,7 +20,5 @@ jobs:
             sudo apt install -y ./mongodb-database-tools-ubuntu2004-x86_64-100.9.4.deb
       - run:
           name: verify MongoDB Database tools is installed
-          environment:
-            TERM: ansi
           command: |
-            sudo dpkg -l mongodb-database-tools
+            mongodump --version
