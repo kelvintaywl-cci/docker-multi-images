@@ -1,113 +1,15 @@
 version: 2.1
 
-commands:
-  wait-for-services:
-    parameters:
-      name-nginx:
-        type: string
-        default: localhost
-      name-postgres:
-        type: string
-        default: localhost
-    steps:
-      - run:
-          name: Wait for services to be ready
-          command: |
-            # docker.io/library/postgres:14.2 exposes its port at 5432
-            # To confirm:
-            #    $ docker inspect docker.io/library/nginx:latest | jq ".[0].Config.ExposedPorts"
-            #    {
-            #      "80/tcp": {}
-            #    }
-            dockerize -wait http://<< parameters.name-nginx >>:80 -wait-retry-interval 3s -timeout 60s
-            # docker.io/library/postgres:14.2 exposes its port at 5432
-            # To confirm:
-            #    $ docker inspect docker.io/library/postgres:14.2 | jq ".[0].Config.ExposedPorts"
-            #    {
-            #      "5432/tcp": {}
-            #    }
-            dockerize -wait tcp://<< parameters.name-postgres >>:5432 -wait-retry-interval 3s -timeout 60s
-  curl-webpage:
-    parameters:
-      name-nginx:
-        type: string
-        default: localhost
-    steps:
-      - run:
-          name: Sanity check that hostname works
-          command: |
-            curl http://<< parameters.name-nginx >>:80
-
 jobs:
-  test-machine-docker:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - run:
-          name: Spin up fancy nginx
-          command: |
-            docker run -d --name fancy_nginx -p "8080:80" docker.io/library/nginx:latest
-      - run:
-          # Showcase another way to check on our server, besides dockerize
-          name: Wait on application to be ready
-          command: |
-            N=8
-            while [ $N -gt 0 ]
-            do
-              if $(nc -z localhost 8080); then
-                echo "Connected!"
-                exit 0
-              fi
-              echo "Not connected; retrying"
-              N=$(( $N - 1 ))
-              sleep 1
-            done
-            exit 1
-      - run: docker exec fancy_nginx echo "hello"
-  container-names:
+  build:
     docker:
-      - image: cimg/base:stable
-        name: primary
-      - image: postgres:14.2
-        name: postgres
-        environment:
-          POSTGRES_PASSWORD: foobar
-          POSTGRES_USER: johndoe
-          POSTGRES_DB: loremipsum
-      - image: nginx:latest
-        name: nginx
-          
-    resource_class: medium
+      - image: cimg/node:18.4.0
+      - image: mongo:6.0.1-focal
+    resource_class: large
     steps:
-      - wait-for-services:
-          name-nginx: nginx
-          name-postgres: postgres
-      - curl-webpage:
-          name-nginx: nginx
+      - run: lsb-release -d
       - run:
-          name: exec on container
+          name: install MongoDB tools
           command: |
-            docker exec nginx echo "hello"
-  default-localhost:
-    docker:
-      - image: cimg/base:stable
-      - image: postgres:14.2
-        environment:
-          POSTGRES_PASSWORD: foobar
-          POSTGRES_USER: johndoe
-          POSTGRES_DB: loremipsum
-      - image: nginx:latest          
-    resource_class: medium
-    steps:
-      - wait-for-services:
-          name-nginx: localhost
-          name-postgres: localhost
-      - curl-webpage:
-          name-nginx: localhost            
-
-workflows:
-  main:
-    jobs:
-      # - container-names
-      - test-machine-docker
-      # - default-localhost
+            # based on https://www.mongodb.com/docs/database-tools/installation/installation-linux/
+            sudo dpkg -l mongodb-database-tools
