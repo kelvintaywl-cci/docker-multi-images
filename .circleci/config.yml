@@ -7,9 +7,18 @@ jobs:
       - image: mongo:6.0.1-focal
     resource_class: large
     steps:
-      - run: lsb-release -d
+      - run: 
+          name: check OS
+          command: |
+            lsb_release -a
       - run:
-          name: install MongoDB tools
+          name: install MongoDB Database tools
           command: |
             # based on https://www.mongodb.com/docs/database-tools/installation/installation-linux/
+            # Link obtained from https://www.mongodb.com/try/download/database-tools
+            sudo curl -o mongodb-database-tools-ubuntu2004-x86_64-100.9.4.deb  https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2004-x86_64-100.9.4.deb
+            sudo apt install -y ./mongodb-database-tools-ubuntu2004-x86_64-100.9.4.deb
+      - run:
+          name: verify MongoDB Database tools is installed
+          command: |
             sudo dpkg -l mongodb-database-tools
