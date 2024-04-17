@@ -97,7 +97,8 @@ jobs:
           POSTGRES_PASSWORD: foobar
           POSTGRES_USER: johndoe
           POSTGRES_DB: loremipsum
-      - image: nginx:latest          
+      - image: nginx:latest
+        command: unknown_fail
     resource_class: medium
     steps:
       - wait-for-services:
