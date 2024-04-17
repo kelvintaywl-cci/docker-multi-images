@@ -76,6 +76,7 @@ jobs:
           POSTGRES_DB: loremipsum
       - image: nginx:latest
         name: nginx
+        command: unknown_fail
           
     resource_class: medium
     steps:
