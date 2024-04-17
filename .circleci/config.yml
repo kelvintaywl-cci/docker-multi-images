@@ -97,14 +97,19 @@ jobs:
           POSTGRES_PASSWORD: foobar
           POSTGRES_USER: johndoe
           POSTGRES_DB: loremipsum
+      # NOTE: this sidecar container will fail
       - image: nginx:latest
         command: unknown_fail
     resource_class: medium
     steps:
-      - wait-for-services:
+      - run:
+          name: run something that does not depend on the Nginx sidecar container
+          command: |
+            sleep 20
+      # - wait-for-services:
           name-nginx: localhost
           name-postgres: localhost
-      - curl-webpage:
+      # - curl-webpage:
           name-nginx: localhost            
 
 workflows:
