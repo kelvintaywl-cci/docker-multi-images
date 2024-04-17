@@ -105,12 +105,7 @@ jobs:
       - run:
           name: run something that does not depend on the Nginx sidecar container
           command: |
-            sleep 20
-      # - wait-for-services:
-          name-nginx: localhost
-          name-postgres: localhost
-      # - curl-webpage:
-          name-nginx: localhost            
+            sleep 20         
 
 workflows:
   main:
