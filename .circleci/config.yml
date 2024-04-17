@@ -108,6 +108,4 @@ jobs:
 workflows:
   main:
     jobs:
-      # - container-names
       - test-machine-docker
-      # - default-localhost
